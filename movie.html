@@ -168,7 +168,10 @@
     </div>
 
     <script>
-        const API_KEY = 'b838a848a571a893e6b0effe4bd53db8';
+        // التعديل: شلنا الـ Key والـ URL المباشر
+        const API_KEY = ''; 
+        const BASE_URL = '/api'; 
+
         const params = new URLSearchParams(window.location.search);
         const id = params.get('id');
         const type = params.get('type') || 'movie';
@@ -176,12 +179,12 @@
         async function fetchContent() {
             if(!id) return;
             try {
-                // طلب البيانات بالعربية والإنجليزية في نفس الوقت
+                // طلب البيانات عبر الباك إند (بدون الكشف عن الـ Key)
                 const [resAR, resEN, resVid, resSim] = await Promise.all([
-                    fetch(`https://api.themoviedb.org/3/${type}/${id}?api_key=${API_KEY}&language=ar-SA`),
-                    fetch(`https://api.themoviedb.org/3/${type}/${id}?api_key=${API_KEY}&language=en-US&append_to_response=credits`),
-                    fetch(`https://api.themoviedb.org/3/${type}/${id}/videos?api_key=${API_KEY}`),
-                    fetch(`https://api.themoviedb.org/3/${type}/${id}/similar?api_key=${API_KEY}&language=ar-SA`)
+                    fetch(`${BASE_URL}/${type}/${id}?language=ar-SA`),
+                    fetch(`${BASE_URL}/${type}/${id}?language=en-US&append_to_response=credits`),
+                    fetch(`${BASE_URL}/${type}/${id}/videos`),
+                    fetch(`${BASE_URL}/${type}/${id}/similar?language=ar-SA`)
                 ]);
 
                 const dataAR = await resAR.json();
@@ -189,10 +192,7 @@
                 const vids = await resVid.json();
                 const similar = await resSim.json();
 
-                // تعريب القصة بذكاء: نأخذ العربية وإذا كانت فارغة نأخذ الإنجليزية
                 document.getElementById('movieOverview').innerText = (dataAR.overview && dataAR.overview.length > 5) ? dataAR.overview : (dataEN.overview || "الوصف غير متوفر حالياً.");
-                
-                // العنوان: يفضل الإنجليزي لأنه الأساسي في قاعدة البيانات العالمية ولكن يمكنك تغييره لـ dataAR.title إذا أردت
                 document.getElementById('movieTitle').innerText = dataEN.title || dataEN.name || dataAR.title || dataAR.name;
                 
                 document.getElementById('poster').src = `https://image.tmdb.org/t/p/w500${dataEN.poster_path}`;
@@ -246,11 +246,12 @@
             grid.innerHTML = '<p style="padding:20px; color:var(--primary);">Loading Episodes...</p>';
             area.style.display = 'block';
             area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            const res = await fetch(`https://api.themoviedb.org/3/tv/${id}/season/${sn}?api_key=${API_KEY}&language=ar-SA`);
+            
+            // طلب الحلقات عبر الباك إند
+            const res = await fetch(`${BASE_URL}/tv/${id}/season/${sn}?language=ar-SA`);
             const data = await res.json();
             
-            // في حالة لم تكن بيانات الحلقة مترجمة للعربية
-            const resBackup = await fetch(`https://api.themoviedb.org/3/tv/${id}/season/${sn}?api_key=${API_KEY}&language=en-US`);
+            const resBackup = await fetch(`${BASE_URL}/tv/${id}/season/${sn}?language=en-US`);
             const dataBackup = await resBackup.json();
 
             grid.innerHTML = '';
